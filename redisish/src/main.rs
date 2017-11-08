@@ -62,7 +62,12 @@ impl Redisish {
                             stream.write(content.as_bytes()).unwrap();
                         }
                     }
-                    stream.flush().unwrap();
+                    match stream.flush() {
+                        Err(_) => {
+                            break;
+                        },
+                        _ => {}
+                    }
                 },
                 Err(_) => {
                     break;
