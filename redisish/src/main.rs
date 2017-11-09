@@ -5,6 +5,7 @@ use std::io::{BufRead, Write};
 use std::collections::VecDeque;
 use bufstream::BufStream;
 
+
 enum Message {
     Get,
     Put(String),
@@ -19,9 +20,9 @@ struct Redisish {
 impl Redisish {
     fn handle_message(&mut self, content: String) -> Message {
         let content = String::from(content.trim());
-        if content == String::from("GET") {
+        if content.to_lowercase() == String::from("get") {
             Message::Get
-        } else if content.starts_with("PUT ") {
+        } else if content.to_lowercase().starts_with("put ") {
             let mut args: Vec<&str> = content.trim().split_whitespace().collect();
             args.remove(0);
             Message::Put(args.join(" "))
@@ -39,6 +40,9 @@ impl Redisish {
 
             match line {
                 Ok(_) => {
+                    if content.len() == 0 {
+                        break;
+                    }
                     let message = self.handle_message(content);
 
                     match message {
@@ -60,6 +64,7 @@ impl Redisish {
                         Message::Invalid(content) => {
                             stream.write(b"- Unknown command: ").unwrap();
                             stream.write(content.as_bytes()).unwrap();
+                            stream.write(b"\n").unwrap();
                         }
                     }
                     match stream.flush() {
@@ -85,7 +90,7 @@ fn main() {
     println!("Server started at 127.0.0.1:8888");
     // accept connections and process them serially
     for stream in listener.incoming() {
-        println!("New client");
+        println!("New connection");
         redisish_server.handle_client(stream.unwrap());
     }
 }

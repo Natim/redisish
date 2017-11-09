@@ -16,7 +16,6 @@ fn main() {
         println!("Sending: {:?}", command);
 
         stream.write(&command.as_bytes()).unwrap();
-        stream.write(b"\n").unwrap();
         stream.flush().unwrap();
 
         let mut result = String::new();
