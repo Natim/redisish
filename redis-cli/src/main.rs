@@ -86,7 +86,14 @@ fn main() {
         println!("Please enter a RETRIEVE or PUSH command");
 
         let mut command = String::new();
-        stdin().read_line(&mut command).unwrap();
+        match stdin().read_line(&mut command) {
+            Ok(_) => {},
+            Err(error) => {
+                println!("stdin not readable: {}", error);
+                ::std::process::exit(2)
+            }
+
+        }
         if command.clone().trim().len() == 0 {
             println!("Exiting");
             break;
