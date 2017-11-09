@@ -9,7 +9,7 @@ fn main() {
     let mut stream = BufStream::new(stream);
 
     loop {
-        println!("Please enter a GET or PUT command");
+        println!("Please enter a RETRIEVE or PUSH command");
         
         let mut command = String::new();
         stdin().read_line(&mut command).unwrap();
