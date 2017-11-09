@@ -13,6 +13,9 @@ fn main() {
         
         let mut command = String::new();
         stdin().read_line(&mut command).unwrap();
+        if command.len() == 0 {
+            break;
+        }
         println!("Sending: {:?}", command);
 
         stream.write(&command.as_bytes()).unwrap();
