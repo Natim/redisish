@@ -15,7 +15,6 @@ pub struct Redisish {
 }
 
 impl Redisish {
-
     pub fn command(&mut self, message: Message) -> String {
         match message {
             Message::Retrieve(channel) => {
@@ -67,5 +66,36 @@ pub fn handle_client(server: &mut Arc<Mutex<Redisish>>, stream: TcpStream) {
                 break;
             }
         }
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_retrieve_command_on_emtpy_channel() {
+        let mut redisish = Redisish::default();
+        let response = redisish.command(Message::from(String::from("RETRIEVE\n")));
+        assert_eq!(response, "- Queue `default` is empty.\n");
+    }
+
+    #[test]
+    fn test_retrieve_command_return_last_added_entry() {
+        let mut redisish = Redisish::default();
+        redisish.command(Message::from(String::from("PUSH remy\n")));
+        redisish.command(Message::from(String::from("PUSH mago\n")));
+        let response = redisish.command(Message::from(String::from("RETRIEVE\n")));
+        assert_eq!(response, "+ mago\n");
+        let response = redisish.command(Message::from(String::from("RETRIEVE\n")));
+        assert_eq!(response, "+ remy\n");
+    }
+
+    #[test]
+    fn test_invalid_command_return_error_message() {
+        let mut redisish = Redisish::default();
+        let response = redisish.command(Message::from(String::from("INVALID\n")));
+        assert_eq!(response, "- Unknown command: INVALID\n");
     }
 }
