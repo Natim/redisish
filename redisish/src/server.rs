@@ -7,13 +7,19 @@ use types::Channel;
 use types::Value;
 use types::Message;
 
+use std::sync::Mutex;
 
-#[derive(Default)]
+
 pub struct Redisish {
-    channels: HashMap<Channel, VecDeque<Value>>,
+    channels: Mutex<HashMap<Channel, VecDeque<Value>>>,
 }
 
 impl Redisish {
+
+    pub fn new() -> Redisish {
+        Redisish { channels: Mutex::new(HashMap::new()) }
+    }
+
     pub fn handle_client(&mut self, stream: TcpStream) {
         let mut stream = BufStream::new(stream);
 
@@ -30,7 +36,8 @@ impl Redisish {
 
                     match message {
                         Message::Retrieve(channel) => {
-                            let mut queue = self.channels.entry(channel.clone())
+                            let mut channels_hashmap = self.channels.lock().unwrap();
+                            let mut queue = channels_hashmap.entry(channel.clone())
                                 .or_insert(VecDeque::new());
 
                             match queue.pop_front() {
@@ -43,7 +50,8 @@ impl Redisish {
                             }
                         },
                         Message::Push(channel, value) => {
-                            let mut queue = self.channels.entry(channel)
+                            let mut channels_hashmap = self.channels.lock().unwrap();
+                            let mut queue = channels_hashmap.entry(channel)
                                 .or_insert(VecDeque::new());
                             queue.push_front(value);
                             stream.write(b"+ OK\n").unwrap();
