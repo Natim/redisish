@@ -3,6 +3,7 @@ pub const DEFAULT_CHANNEL: &'static str = "default";
 pub type Channel = String;
 pub type Value = String;
 
+#[derive(Debug, PartialEq)]
 pub enum Message {
     Retrieve(Channel),
     Push(Channel, Value),
@@ -30,5 +31,40 @@ impl From<String> for Message {
             },
             (_, _, _) => Message::Invalid(String::from(content))
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_retrieve_without_channel() {
+        assert_eq!(Message::from(String::from("RETRIEVE\n")),
+                   Message::Retrieve(String::from(DEFAULT_CHANNEL)))
+    }
+    
+    #[test]
+    fn test_retrieve_with_channel() {
+        assert_eq!(Message::from(String::from("RETRIEVE mago\n")),
+                   Message::Retrieve(String::from("mago")))
+    }
+
+    #[test]
+    fn test_push_without_channel() {
+        assert_eq!(Message::from(String::from("PUSH mago\n")),
+                   Message::Push(String::from(DEFAULT_CHANNEL), String::from("mago")))
+    }
+
+    #[test]
+    fn test_push_with_channel() {
+        assert_eq!(Message::from(String::from("PUSH names mago\n")),
+                   Message::Push(String::from("names"), String::from("mago")))
+    }
+
+    #[test]
+    fn test_invalid() {
+        assert_eq!(Message::from(String::from("GET\n")),
+                   Message::Invalid(String::from("GET")))
     }
 }
