@@ -9,13 +9,15 @@ use types::Message;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+type Response = String;
+
 #[derive(Default)]
 pub struct Redisish {
     channels: HashMap<Channel, VecDeque<Value>>,
 }
 
 impl Redisish {
-    pub fn command(&mut self, message: Message) -> String {
+    pub fn command(&mut self, message: Message) -> Response {
         match message {
             Message::Retrieve(channel) => {
                 let mut queue = self.channels.entry(channel.clone())
@@ -54,10 +56,10 @@ pub fn handle_client(server: &mut Arc<Mutex<Redisish>>, stream: TcpStream) {
                     break;
                 }
                 let message = Message::from(content);
-                let mut s = server.lock().unwrap();
+                let mut s = server.lock().expect("Was enable to lock the database mutex,
+                                                  it was poisoned");
                 let response = s.command(message);
-                stream.write(response.as_bytes()).unwrap();
-                match stream.flush() {
+                match stream.write(response.as_bytes()).and_then(|_| stream.flush()) {
                     Err(_) => break,
                     _ => {}
                 }

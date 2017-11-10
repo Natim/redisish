@@ -16,9 +16,16 @@ fn main() {
     // accept connections and process them serially
     for stream in listener.incoming() {
         println!("New connection");
-        let mut server = Arc::clone(&redisish_server);
-        thread::spawn(move || {
-            handle_client(&mut server, stream.unwrap());
-        });
+        match stream {
+            Ok(stream) => {
+                let mut server = Arc::clone(&redisish_server);
+                thread::spawn(move || {
+                    handle_client(&mut server, stream);
+                });
+            },
+            Err(_) => {
+                println!("Connection closed.");
+            }
+        }
     }
 }
